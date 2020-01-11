@@ -254,3 +254,18 @@ select * from ArtistsView2
 
 Update ArtistsView2
 Set Name = 'Muse2' Where Name = 'Muse'
+
+create view ArtistsView3 as
+select Artists.Id as [Artists Id], Artists.Name as [Artists Name],
+Discs.Id as [Discs Id], Discs.Name as [Discs Name], Discs.ArtistId as [Discs.ArtistId],
+Discs.PublisherId as [Discs PublisherId], Discs.ReleaseDate as [Discs ReleaseDate],
+Discs.Review as [Discs Review], Discs.StyleId as [Discs StyleId], Publishers.Id as [Publishers Id], 
+Publishers.Country as [Publishers Country], Publishers.Name as [Publishers Name] 
+from Artists
+INNER join Discs on Discs.ArtistId = Artists.Id
+INNER join Publishers on Discs.PublisherId = Publishers.Id
+
+Update ArtistsView3
+Set [Discs Name] = 'DiscA1S11' Where [Discs Name] = 'DiscA1S1'
+
+select * from ArtistsView3
