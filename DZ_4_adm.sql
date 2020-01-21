@@ -131,17 +131,32 @@ insert into [Discs Test]([Name], [ArtistId], [StyleId], [PublisherId], [ReleaseD
 
 go
 create function fun2()
-returns table 
+returns @DInfo table(
+Discs nvarchar(max) not null,
+Artist nvarchar(max) not null,
+CountArtist int not null,
+ReleaseDate date not null,
+Review nvarchar(max) not null
+)
 as
-return
-(
-select count(Artists.Name) , [Discs Test].Name from [Discs Test], Artists where ArtistId=Artists.Id group by [Discs Test].Name Having COUNT(Artists.Name) > 1
+begin
+
+declare @tmptable table(
+CountArtist int not null, 
+DiscName nvarchar(max) not null
 )
 
+insert into @tmptable (CountArtist, DiscName)
+select count(Artists.Name) , [Discs Test].Name from [Discs Test], Artists where ArtistId=Artists.Id group by [Discs Test].Name
 
-select * from dbo.fun2()
+insert into @DInfo (Discs, Artist, CountArtist, ReleaseDate)
+select [Discs Test].Name as Disc, Artists.Name as Artist, CountArtist, ReleaseDate from [Discs Test], Artists, @tmptable where ArtistId=Artists.Id
+		and [Discs Test].Name=DiscName and CountArtist>1 order by Disc
 
+return
+end;
 
+select * from fun2()
 --3. Пользовательская функция возвращает информацию о всех песнях в чьем названии встречается заданное слово. Слово
 --передаётся в качестве параметра
 go
@@ -203,14 +218,28 @@ select * from dbo.fun6()
 --стилях.
 go
 create function fun7()
-returns table
+returns @AInfo table(
+Discs nvarchar(max) not null,
+Artist nvarchar(max) not null,
+CountStyle int not null
+)
 as
-return
-(
-select Artists.Name, Discs.StyleId from Artists
-join Discs on Discs.ArtistId = Artists.Id
-group by Artists.Name, Discs.StyleId
-Having COUNT(Discs.StyleId) >=2
+begin
+
+declare @tmptable table(
+CountStyle int not null, 
+Artist nvarchar(max) not null
 )
 
-select * from dbo.fun7()
+insert into @tmptable (CountStyle, Artist)
+select count(Styles.Name) , Artists.Name from Discs, Artists,Styles 
+	where ArtistId=Artists.Id and StyleId=Styles.Id group by Artists.Name
+
+insert into @AInfo (Discs, Artist, CountStyle)
+select Discs.Name as Disc, Artists.Name as Artist, CountStyle from Discs, Artists, @tmptable 
+		where Discs.ArtistId=Artists.Id and Artist=Artists.Name and CountStyle>1 order by Disc
+
+return
+end;
+
+select * from fun7()
